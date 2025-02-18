@@ -1,0 +1,227 @@
+import csv
+import os
+from shapely import from_wkt, to_geojson, from_geojson
+from shapely.ops import unary_union
+from shapely.geometry import Polygon, MultiPolygon, box
+import geojson
+import geopandas as gpd
+import logging
+
+logger = logging.getLogger('boundariesparse')
+
+
+
+class QueryBoundary:
+    def __init__(self):
+        self._name = None
+        self._boundary = None
+
+    def build_boundary(self, name, bndry):
+        self._name = name
+        self._boundary = bndry
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def boundary(self):
+        return self._boundary
+
+class Boundary:
+    def __init__(self, unique_id):
+        self._id = unique_id
+        self._logger = logging.getLogger('boundariesparse')
+        self._boundaries = []
+
+    @property
+    def boundaries(self):
+        return self._boundaries
+
+    def determine_boundaries_filetype(self, filepath: str):
+        type = None
+        filename = None
+        files = os.listdir(filepath)
+        self._logger.info(f"{self._id} files: {files}")
+        for file in files:
+            filename, filext = os.path.splitext(file)
+            if ".shp" in filext:
+                type = 'shapefile'
+                filename = os.path.join(filepath, file)
+                break
+            elif ".csv" in filext:
+                type = 'csv'
+                filename = os.path.join(filepath, file)
+                break
+            elif ".json" in filext:
+                type = 'json'
+                filename = os.path.join(filepath, file)
+                break
+        return type,filename
+
+    def get_parser(self, file_type: str):
+        if file_type == 'csv':
+            return CSVBoundaryParser
+        elif file_type == 'json':
+            return JSONBoundaryParser
+        elif file_type == 'shapefile':
+            return SHPBoundaryParser
+        return None
+
+    def parse_boundaries_file(self, filepath):
+        self._logger.info(f"{self._id} parse_boundaries_file checking: {filepath}")
+        #If the filepath is a directory, then we'll list the files in it. This is probably going to
+        #be a unzipped shapefile.
+        file_type,filename = self.determine_boundaries_filetype(filepath)
+        self._logger.info(f"{self._id} parse_boundaries_file checking: {filepath} is type: {file_type}")
+        parser_class = self.get_parser(file_type)
+        self._logger.info(f"{self._id} parse_boundaries_file parser is: {parser_class}")
+        try:
+            bnd_parser = parser_class(unique_id=self._id)
+            self._logger.info(f"{self._id} parse_boundaries_file parsing file: {filepath}")
+            self._boundaries = bnd_parser.parse(filepath=filename)
+            return True
+        except Exception as e:
+            self._logger.exception(f"{self._id} parse_boundaries_file exception: {e}")
+        return False
+
+
+class BoundaryParser:
+    def __init__(self, unique_id):
+        self._id = unique_id
+        self._logger = logging.getLogger('boundariesparse')
+    def parse(self, **kwargs):
+        boundaries = None
+        self._logger.info(f"{self._id} parse started filepath: {kwargs['filepath']}")
+        try:
+            boundaries = self._do_parsing(**kwargs)
+        except Exception as e:
+            self._logger.exception(f"{self._id} parse exception: {e}")
+        self._logger.info(f"{self._id} parse finished.")
+        return boundaries
+
+    def _do_parsing(self, **kwargs):
+        pass
+class CSVBoundaryParser(BoundaryParser):
+    def _do_parsing(self, **kwargs):
+        '''
+        Parses a CSV file that has the Name,WKT format.
+        :param filename: str that is the full path to the CSV file.
+        :return:
+        '''
+        filename = kwargs.get('filepath', None)
+        logger = logging.getLogger()
+        boundaries_tuples = []
+        try:
+            header = ['Name', 'WKT']
+            with open(filename, "r") as boundaries_csv_file:
+                csv_reader = csv.DictReader(boundaries_csv_file, fieldnames=header)
+                for row in csv_reader:
+                    polygon = geojson.loads(to_geojson(from_wkt(row['WKT'])))
+                    boundaries_tuples.append((row['Name'], polygon))
+        except Exception as e:
+            logger.exception(e)
+
+        return boundaries_tuples
+
+class SHPBoundaryParser(BoundaryParser):
+    def _do_parsing(self, **kwargs):
+        shp_filepath = kwargs.get('filepath', None)
+        boundaries_tuples = []
+        '''
+        shp_filepath = None
+        files = os.listdir(filepath)
+        for file in files:
+            filename, filext = os.path.splitext(file)
+            if ".shp" in filext:
+                shp_filepath = os.path.join(filepath, file)
+                break
+        '''
+        if shp_filepath is not None:
+            shp_dataframe = gpd.read_file(shp_filepath, engine='fiona')
+            for ndx, row in shp_dataframe.iterrows():
+                bnd_json = geojson.loads(to_geojson(row['geometry']))
+                boundaries_tuples.append((row['Name'], bnd_json))
+        return boundaries_tuples
+
+class JSONBoundaryParser(BoundaryParser):
+    def _do_parsing(self, **kwargs):
+        filename = kwargs.get('filepath', None)
+
+        boundaries_tuples = []
+        try:
+            json_dataframe = gpd.read_file(filename, engine='fiona')
+            '''
+            for ndx, row in json_dataframe.iterrows():
+                bnd_json = geojson.loads(to_geojson(row['geometry']))
+                boundaries_tuples.append((row['Name'], bnd_json))
+            '''
+        except Exception as e:
+            self._logger.exception(e)
+        return boundaries_tuples
+
+'''
+def  parse_boundaries_file(filename: str):
+    logger.info(f"parse_boundaries_file started, filename: {filename}")
+
+    #FIgure out what sort of file the boundaries is.
+    file_mimetype = determine_boundaries_filetype(filename)
+    logger.info(f"parse_boundaries_file mime type: {file_mimetype} found.")
+    parser = get_parser(file_mimetype)
+    boundaries_data = parser(filename)
+    return boundaries_data
+'''
+
+
+
+def parse_csv_file(filename: str):
+    '''
+    Parses a CSV file that has the Name,WKT format.
+    :param filename: str that is the full path to the CSV file.
+    :return:
+    '''
+    logger = logging.getLogger()
+    boundaries_tuples = []
+    try:
+        header = ['Name', 'WKT']
+        with open(filename, "r") as boundaries_csv_file:
+            csv_reader = csv.DictReader(boundaries_csv_file, fieldnames=header)
+            for row in csv_reader:
+                polygon = geojson.loads(to_geojson(from_wkt(row['WKT'])))
+                #polygon = from_wkt(row['WKT'])
+                boundaries_tuples.append((row['Name'], polygon))
+    except Exception as e:
+        logger.exception(e)
+
+    return boundaries_tuples
+
+def find_bbox_from_boundaries(boundaries: [], buffer_percent: float):
+    '''
+    Computes the total extent of boundaries provided. If the buffer_percent is provided, the bbox is increased
+    by that percentage.
+    :param boundaries:
+    :param buffer_percent:
+    :return:
+    '''
+    bbox = None
+    poly_list = []
+    for boundary in boundaries:
+        polygon = from_geojson(geojson.dumps(boundary[1]))
+        poly_list.append(polygon)
+    multi_polys = MultiPolygon(poly_list)
+    minx, miny, maxx, maxy = multi_polys.bounds
+    '''
+    combined_polygons = unary_union(poly_list)
+    minx, miny, maxx, maxy = combined_polygons.bounds
+    '''
+    #
+    if buffer_percent is not None:
+        width = maxx - minx
+        height = maxy - miny
+
+        minx = minx - (width * buffer_percent)
+        miny = miny - (height * buffer_percent)
+        maxx = maxx + (width * buffer_percent)
+        maxy = maxy + (height * buffer_percent)
+    bbox = [(miny, minx), (maxy, maxx)]
+    return bbox
