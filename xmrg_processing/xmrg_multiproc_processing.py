@@ -302,6 +302,8 @@ class xmrg_processing_geopandas:
     def import_files(self, file_list_iterator):
         self._logger.info("Start import_files")
 
+        current_process().daemon = False
+
         input_queue = Queue()
         results_queue = Queue()
         #Start the file list populator thread.
@@ -330,7 +332,7 @@ class xmrg_processing_geopandas:
                 'debug_files_directory': self._kml_output_directory,
                 'base_log_output_directory': self._base_log_output_directory
             }
-            p = Process(target=process_xmrg_file_geopandas, kwargs=args, daemon=False)
+            p = Process(target=process_xmrg_file_geopandas, kwargs=args)
             self._logger.info(f"{self._unique_id} Starting process: %s" % (p._name))
             p.start()
             processes.append(p)

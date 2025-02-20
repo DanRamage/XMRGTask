@@ -13,7 +13,7 @@ import zipfile
 from config import *
 from multiprocessing import set_start_method
 
-set_start_method('fork')
+#set_start_method('fork')
 
 '''
 import sys
