@@ -328,7 +328,7 @@ class xmrg_processing_geopandas:
                 'debug_files_directory': self._kml_output_directory,
                 'base_log_output_directory': self._base_log_output_directory
             }
-            p = Process(target=process_xmrg_file_geopandas, kwargs=args)
+            p = Process(target=process_xmrg_file_geopandas, kwargs=args, daemon=False)
             self._logger.info(f"{self._unique_id} Starting process: %s" % (p._name))
             p.start()
             processes.append(p)
