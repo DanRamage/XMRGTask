@@ -1,7 +1,7 @@
 import os
 import logging
 import threading
-from multiprocessing import Process, Queue, current_process
+from multiprocessing import Process, Queue, current_process, set_start_method
 from threading import Thread
 import time
 from venv import logger
@@ -314,6 +314,7 @@ class xmrg_processing_geopandas:
         file_queue_build_thread.start()
 
         processes = []
+        set_start_method('fork')
         #Create a multiprocessing Process() for each worker.
         for workerNum in range(self._worker_process_count ):
             args = {
