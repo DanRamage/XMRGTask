@@ -11,6 +11,9 @@ import logging
 from email_results import email_results
 import zipfile
 from config import *
+from multiprocessing import set_start_method
+
+set_start_method('fork')
 
 '''
 import sys
@@ -26,7 +29,8 @@ app = Celery("tasks",
              broker='pyamqp://xmrg_task:239sumwalt@127.0.0.1//',
              backend='rpc://')
 
-app.conf.update(worker_max_tasks_per_child=100,  worker_max_memory_per_child=4000)
+app.worker_main(['worker', '--loglevel=info', '--concurrency=4'])
+#app.conf.update(worker_max_tasks_per_child=100,  worker_max_memory_per_child=4000)
 
 SCRIPT_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 

@@ -1,7 +1,7 @@
 import os
 import logging
 import threading
-from multiprocessing import Process, Queue, current_process, set_start_method
+from multiprocessing import Process, Queue, current_process
 from threading import Thread
 import time
 from venv import logger
@@ -14,7 +14,6 @@ from xmrgprocessing.xmrg_results import xmrg_results
 from xmrgprocessing.geoXmrg import geoXmrg, LatLong
 from xmrgprocessing.xmrg_utilities import get_collection_date_from_filename
 
-set_start_method('fork')
 
 
 def file_queue_builder(**kwargs):
