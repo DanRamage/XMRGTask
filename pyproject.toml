@@ -12,7 +12,7 @@ celery = "^5.4.0"
 geojson = "^3.1.0"
 dateparser = "^1.2.0"
 pydevd-pycharm = "^243.23654.74"
-
+fiona = "^1.10.1"
 
 [build-system]
 requires = ["poetry-core"]
