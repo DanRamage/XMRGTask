@@ -28,7 +28,7 @@ pydevd_pycharm.settrace('127.0.0.1',
 app = Celery("tasks",
              broker='pyamqp://xmrg_task:239sumwalt@127.0.0.1//',
              backend='rpc://')
-
+app.conf.worker_force_execv = True
 #app.worker_main(['worker', '--loglevel=info', '--concurrency=4'])
 #app.conf.update(worker_max_tasks_per_child=100,  worker_max_memory_per_child=4000)
 
