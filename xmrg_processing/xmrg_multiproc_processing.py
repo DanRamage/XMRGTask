@@ -14,6 +14,9 @@ from xmrgprocessing.xmrg_results import xmrg_results
 from xmrgprocessing.geoXmrg import geoXmrg, LatLong
 from xmrgprocessing.xmrg_utilities import get_collection_date_from_filename
 
+set_start_method('fork')
+
+
 def file_queue_builder(**kwargs):
     '''
     This function is a thread worker that creates the list of XMRG files we're going to process.
@@ -314,7 +317,6 @@ class xmrg_processing_geopandas:
         file_queue_build_thread.start()
 
         processes = []
-        set_start_method('fork')
         #Create a multiprocessing Process() for each worker.
         for workerNum in range(self._worker_process_count ):
             args = {
