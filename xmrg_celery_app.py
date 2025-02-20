@@ -8,8 +8,10 @@ from xmrg_processing.xmrg_process import xmrg_process
 from xmrg_processing.csvdatasaver import nexrad_csv_saver
 import zipfile
 import logging
-
+from email_results import email_results
+import zipfile
 from config import *
+
 '''
 import sys
 sys.path.append("./debug/pydevd-pycharm.egg")
@@ -25,6 +27,8 @@ app = Celery("tasks",
              backend='rpc://')
 
 app.conf.update(worker_max_tasks_per_child=100,  worker_max_memory_per_child=4000)
+
+SCRIPT_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 
 def pre_process_boundary_file(task_path, boundary_filename, boundary_file, task_id):
     logger = logging.getLogger()
@@ -65,9 +69,15 @@ def build_task_directories(task_path):
 
 
 @app.task(bind=True)
-def xmrg_task(self, start_date: str, end_date: str, boundary_filename: str, boundary_file: bytes):
+def xmrg_task(self,
+              start_date: str,
+              end_date: str,
+              boundary_filename: str,
+              boundary_file: bytes,
+              email_address: str):
     task_id = self.request.id
-    task_path = os.path.join(REQUEST_DIRECTORY, task_id)
+
+    task_path = os.path.join(SCRIPT_DIRECTORY, REQUEST_DIRECTORY, task_id)
     build_task_directories(task_path)
     local_data_directory = os.path.join(task_path, DATA_DIRECTORY)
     result_directory = os.path.join(task_path, RESULTS_DIRECTORY)
@@ -122,5 +132,35 @@ def xmrg_task(self, start_date: str, end_date: str, boundary_filename: str, boun
         xmrg_proc.process(start_date=process_start_date, end_date=process_end_date,
                           base_xmrg_directory=XMRG_DATA_DIRECTORY)
 
+        email_files = csv_saver.csv_filenames
+        subject = "XMRG Results"
+        message = f"Attached are your results for: {start_date} to {end_date}"
+        send_email(email_address, subject, message, email_files)
     logger.info(f"{task_id} completed task.")
     return "Weeeee"
+
+def send_email(to_email: str, subject: str, message: str, attachments: []):
+    '''
+    :return:
+    '''
+    #Let's zip the files
+    files_to_attach = []
+    for result_file in attachments:
+        directory, file_name = os.path.split(result_file)
+        file_name, exten = os.path.splitext(file_name)
+        zip_filepath = os.path.join(directory, f"{file_name}.zip")
+        with zipfile.ZipFile(zip_filepath, 'w', compression=zipfile.ZIP_DEFLATED) as zip_ref:
+            zip_ref.write(result_file, f"{file_name}{exten}")
+            files_to_attach.append(zip_filepath)
+
+    email_settings = {
+        'host': MAILHOST,
+        'username': USER,
+        'password': PASSWORD,
+        'use_tls': True,
+        'port': PORT,
+        'from_address': FROMADDR,
+        'to_addresses': [to_email],
+    }
+    #(email_settings, subject, message, attachments):
+    email_results(email_settings, subject, message, files_to_attach)

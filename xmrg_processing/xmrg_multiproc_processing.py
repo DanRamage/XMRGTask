@@ -15,6 +15,13 @@ from xmrgprocessing.geoXmrg import geoXmrg, LatLong
 from xmrgprocessing.xmrg_utilities import get_collection_date_from_filename
 
 def file_queue_builder(**kwargs):
+    '''
+    This function is a thread worker that creates the list of XMRG files we're going to process.
+    We use a worker thread to do this since it's possible we could have 1000s of files and it would
+    be memory costly to add all the files into the queue first before we started processing.
+    :param kwargs:
+    :return:
+    '''
     logger = logging.getLogger('file_queue_builder')
     try:
         input_queue = kwargs['input_queue']
@@ -24,6 +31,7 @@ def file_queue_builder(**kwargs):
         worker_count = kwargs['worker_count']
         logger.info(f"{unique_id} file_queue_builder starting.")
 
+        file_count = 0
         for xmrg_file in file_list_iterator:
             logger.info(f"{unique_id} queueing file: {xmrg_file}")
             file_to_process = xmrg_file
@@ -33,6 +41,7 @@ def file_queue_builder(**kwargs):
                     try:
                         xmrg_src_dir, xmrg_src_filename = os.path.split(xmrg_file)
                         source_full_filepath = os.path.join(local_copy_directory, xmrg_src_filename)
+                        logger.info(f"{unique_id} copying to local file: {source_full_filepath}")
                         shutil.copy2(xmrg_file, source_full_filepath)
                         file_to_process = source_full_filepath
                     except Exception as e:
@@ -43,18 +52,22 @@ def file_queue_builder(**kwargs):
 
             if file_to_process is not None:
                 input_queue.put(file_to_process)
+                file_count += 1
     except Exception as e:
         logger.exception(f"{unique_id} {e}")
 
     #Add the stop indicator for each worker.
     for cnt in range(worker_count):
         input_queue.put("STOP")
-    logger.info(f"{unique_id} Finished iterating files.")
+    logger.info(f"{unique_id} Finished iterating {file_count} files.")
     return
 
 def process_xmrg_file_geopandas(**kwargs):
     '''
-
+    This is a Process worker which pulls XMRG filenames from the input_queue and with the boundaries
+    provided, calculates the weighted rainfall average for the boundary.
+    The results are stored in an xmrg_result object and added to the results_queue which
+    the parent process handles.
     :param kwargs:
     :return:
     '''

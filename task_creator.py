@@ -6,9 +6,9 @@ import json
 
 app = Celery("tasks", broker='pyamqp://xmrg_task:239sumwalt@127.0.0.1//')
 
-start_date = "2025-02-10"
-end_date = "2025-02-17"
-
+start_date = "2025-01-01"
+end_date = "2025-02-19"
+email_address="ramaged@mailbox.sc.edu"
 boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/layers/Archive.zip'
 #boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/XMRGAreas.json'
 #boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/boundaries.csv'
@@ -19,7 +19,8 @@ with open(boundary_file_path
 
 boundary_directory, boundary_filename = os.path.split(boundary_file_path)
 # Send the task along with file content to the queue
-result = app.send_task('xmrg_celery_app.xmrg_task', args=[start_date, end_date, boundary_filename, file_content])
+result = app.send_task('xmrg_celery_app.xmrg_task',
+                       args=[start_date, end_date, boundary_filename, file_content, email_address] )
 
 # Access the unique task ID
 task_id = result.id
