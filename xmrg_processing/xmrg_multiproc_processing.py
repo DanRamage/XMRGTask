@@ -135,6 +135,7 @@ def process_xmrg_file_geopandas(**kwargs):
             # Build boundary dataframes
             boundary_frames = []
             for boundary in boundaries:
+                logger.info(f"{process_name} adding boundary {boundary[0]}")
                 df = pd.DataFrame([[boundary[0], boundary[1]]], columns=['Name', 'Boundaries'])
                 boundary_df = gpd.GeoDataFrame(df, geometry=df.Boundaries)
                 boundary_df = boundary_df.drop(columns=['Boundaries'])
@@ -154,6 +155,7 @@ def process_xmrg_file_geopandas(**kwargs):
                 boundary_frames.append(boundary_df)
 
             tot_file_time_start = time.time()
+            logger.info(f"{process_name} begin processing queue.")
             for xmrg_filename in iter(input_queue.get, 'STOP'):
                 logger.info(f"{process_name} processing file: {xmrg_filename}")
 
