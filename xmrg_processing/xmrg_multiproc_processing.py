@@ -106,7 +106,7 @@ def process_xmrg_file_geopandas(**kwargs):
             # Boundaries we are creating the weighted averages for.
             boundaries = kwargs['boundaries']
 
-            logger = logging.getLogger()
+            logger = logging.getLogger(process_name)
             logger.setLevel(logging.DEBUG)
             formatter = logging.Formatter("%(asctime)s,%(levelname)s,%(funcName)s,%(lineno)d,%(message)s")
             fh = logging.handlers.RotatingFileHandler(log_output_filename)
