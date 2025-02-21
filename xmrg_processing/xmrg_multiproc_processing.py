@@ -252,7 +252,7 @@ def process_xmrg_file_geopandas(**kwargs):
 
 class xmrg_processing_geopandas:
     def __init__(self):
-        self._logger = logging.getLogger()
+        self._logger = None
         self._min_latitude_longitude = None
         self._max_latitude_longitude = None
         self._save_all_precip_values = False
@@ -267,6 +267,10 @@ class xmrg_processing_geopandas:
         self._worker_process_count = 4
         self._unique_id = ""
     def setup(self, **kwargs):
+
+        self._unique_id = kwargs.get("unique_id", "")
+        self._logger = logging.getLogger(f"xmrg_task_{self._unique_id}")
+
         #Number of Processes to spawn.
         self._worker_process_count = kwargs.get("worker_process_count", 4)
 
@@ -298,7 +302,6 @@ class xmrg_processing_geopandas:
         #Directory where logfiles are written.
         self._base_log_output_directory = kwargs.get("base_log_output_directory", "")
 
-        self._unique_id = kwargs.get("unique_id", "")
     def import_files(self, file_list_iterator):
         self._logger.info("Start import_files")
 
