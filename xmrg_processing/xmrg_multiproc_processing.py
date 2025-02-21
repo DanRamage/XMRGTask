@@ -247,8 +247,6 @@ def process_xmrg_file_geopandas(**kwargs):
     except Exception as e:
         logger.exception(e)
 
-    logger.info(f"{process_name} process finished. Processed in: "
-                 f"{time.time() - processing_start_time} seconds")
     return
 
 
