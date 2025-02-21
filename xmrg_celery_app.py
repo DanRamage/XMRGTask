@@ -87,7 +87,7 @@ def xmrg_task(self,
     result_directory = os.path.join(task_path, RESULTS_DIRECTORY)
     log_directory = os.path.join(task_path, LOGFILE_DIRECTORY)
     # Create a logger
-    logger = logging.getLogger()
+    logger = logging.getLogger(f"xmrg_task_{task_id}")
     logger.setLevel(logging.DEBUG)
 
     # Create a file handler and set level to info
@@ -141,7 +141,7 @@ def xmrg_task(self,
         message = f"Attached are your results for: {start_date} to {end_date}"
         send_email(email_address, subject, message, email_files)
     logger.info(f"{task_id} completed task.")
-    return "Weeeee"
+    return
 
 def send_email(to_email: str, subject: str, message: str, attachments: []):
     '''
