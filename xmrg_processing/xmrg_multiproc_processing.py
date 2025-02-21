@@ -375,7 +375,7 @@ class xmrg_processing_geopandas:
             input_queue.close()
 
         self._logger.info(f"{self._unique_id} Finished. Imported: {rec_count} records in: "
-                          f"{start_import_files_time - time.time()} seconds")
+                          f"{time.time() - start_import_files_time} seconds")
 
         return
 
