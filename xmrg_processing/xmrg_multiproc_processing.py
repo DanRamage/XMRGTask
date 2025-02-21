@@ -357,6 +357,8 @@ class xmrg_processing_geopandas:
 
 
         # Poll the queue once more to get any remaining records.
+        for p in processes:
+            input_queue.put("STOP")
         while not results_queue.empty():
             self._logger.info(f"{self._unique_id} Pulling records from resultsQueue.")
             self.process_result(results_queue.get())
