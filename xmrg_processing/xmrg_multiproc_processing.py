@@ -303,6 +303,8 @@ class xmrg_processing_geopandas:
         self._base_log_output_directory = kwargs.get("base_log_output_directory", "")
 
     def import_files(self, file_list_iterator):
+        start_import_files_time = time.time()
+
         self._logger.info("Start import_files")
 
         current_process().daemon = False
@@ -372,7 +374,8 @@ class xmrg_processing_geopandas:
             results_queue.close()
             input_queue.close()
 
-        self._logger.info(f"{self._unique_id} Finished. Imported: {rec_count} records.")
+        self._logger.info(f"{self._unique_id} Finished. Imported: {rec_count} records in: "
+                          f"{start_import_files_time - time.time()} seconds")
 
         return
 
