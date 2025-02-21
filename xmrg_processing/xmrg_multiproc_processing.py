@@ -316,54 +316,58 @@ class xmrg_processing_geopandas:
         }
         file_queue_build_thread = threading.Thread(target=file_queue_builder, kwargs=thrd_args)
         file_queue_build_thread.start()
+        try:
+            processes = []
+            #Create a multiprocessing Process() for each worker.
+            for workerNum in range(self._worker_process_count ):
+                args = {
+                    'input_queue': input_queue,
+                    'results_queue': results_queue,
+                    'min_lat_lon': self._min_latitude_longitude,
+                    'max_lat_lon': self._max_latitude_longitude,
+                    'save_all_precip_vals': self._save_all_precip_values,
+                    'boundaries': self._boundaries,
+                    'delete_source_file': self._delete_source_file,
+                    'delete_compressed_source_file': self._delete_compressed_source_file,
+                    'debug_files_directory': self._kml_output_directory,
+                    'base_log_output_directory': self._base_log_output_directory
+                }
+                p = Process(target=process_xmrg_file_geopandas, kwargs=args)
+                self._logger.info(f"{self._unique_id} Starting process: %s" % (p._name))
+                p.start()
+                processes.append(p)
 
-        processes = []
-        #Create a multiprocessing Process() for each worker.
-        for workerNum in range(self._worker_process_count ):
-            args = {
-                'input_queue': input_queue,
-                'results_queue': results_queue,
-                'min_lat_lon': self._min_latitude_longitude,
-                'max_lat_lon': self._max_latitude_longitude,
-                'save_all_precip_vals': self._save_all_precip_values,
-                'boundaries': self._boundaries,
-                'delete_source_file': self._delete_source_file,
-                'delete_compressed_source_file': self._delete_compressed_source_file,
-                'debug_files_directory': self._kml_output_directory,
-                'base_log_output_directory': self._base_log_output_directory
-            }
-            p = Process(target=process_xmrg_file_geopandas, kwargs=args)
-            self._logger.info(f"{self._unique_id} Starting process: %s" % (p._name))
-            p.start()
-            processes.append(p)
+            rec_count = 0
+            while any([(checkJob is not None and checkJob.is_alive()) for checkJob in processes]):
+                if not results_queue.empty():
+                    self.process_result(results_queue.get())
+                    rec_count += 1
+                    if (rec_count % 10) == 0:
+                        self._logger.info(f"{self._unique_id} Processed {rec_count} results")
+        finally:
+            # Wait for the process to finish.
+            self._logger.info(f"{self._unique_id} waiting for {self._worker_process_count} processes to finish.")
+            for p in processes:
+                if p.is_alive():
+                    p.terminate()
+                    p.join()
+                if hasattr(p, 'close'):
+                    p.close()
 
-        rec_count = 0
-        while any([(checkJob is not None and checkJob.is_alive()) for checkJob in processes]):
-            if not results_queue.empty():
+            #Wait for the file builder queue to finish.
+            file_queue_build_thread.join()
+
+            self._logger.info(f"{self._unique_id} builder thread and xmrg processes finished.")
+
+
+            # Poll the queue once more to get any remaining records.
+            while not results_queue.empty():
+                self._logger.info(f"{self._unique_id} Pulling records from resultsQueue.")
                 self.process_result(results_queue.get())
                 rec_count += 1
-                if (rec_count % 10) == 0:
-                    self._logger.info(f"{self._unique_id} Processed {rec_count} results")
 
-        # Wait for the process to finish.
-        self._logger.info(f"{self._unique_id} waiting for {self._worker_process_count} processes to finish.")
-        for p in processes:
-            p.join()
-        for p in processes:
-            p.close()
-
-        #Wait for the file builder queue to finish.
-        file_queue_build_thread.join()
-
-        self._logger.info(f"{self._unique_id} builder thread and xmrg processes finished.")
-
-
-        # Poll the queue once more to get any remaining records.
-        while not results_queue.empty():
-            self._logger.info(f"{self._unique_id} Pulling records from resultsQueue.")
-            self.process_result(results_queue.get())
-            rec_count += 1
-
+            results_queue.close()
+            input_queue.close()
 
         self._logger.info(f"{self._unique_id} Finished. Imported: {rec_count} records.")
 
