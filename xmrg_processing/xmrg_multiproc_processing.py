@@ -345,29 +345,27 @@ class xmrg_processing_geopandas:
                 if (rec_count % 10) == 0:
                     self._logger.info(f"{self._unique_id} Processed {rec_count} results")
 
-        #self._logger.info(f"{self._unique_id} Finished iterating files.")
-        #input_queue.put("STOP")
         # Wait for the process to finish.
         self._logger.info(f"{self._unique_id} waiting for {self._worker_process_count} processes to finish.")
         for p in processes:
             p.join()
+        for p in processes:
+            p.close()
 
         #Wait for the file builder queue to finish.
         file_queue_build_thread.join()
 
+        self._logger.info(f"{self._unique_id} builder thread and xmrg processes finished.")
+
 
         # Poll the queue once more to get any remaining records.
-        for p in processes:
-            input_queue.put("STOP")
         while not results_queue.empty():
             self._logger.info(f"{self._unique_id} Pulling records from resultsQueue.")
             self.process_result(results_queue.get())
             rec_count += 1
 
 
-        self._logger.info(f"{self._unique_id} Imported: {rec_count} records")
-
-        self._logger.info(f"{self._unique_id} Finished import_files")
+        self._logger.info(f"{self._unique_id} Finished. Imported: {rec_count} records.")
 
         return
 
