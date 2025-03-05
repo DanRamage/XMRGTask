@@ -26,7 +26,7 @@ pydevd_pycharm.settrace('127.0.0.1',
 '''
 
 app = Celery("tasks",
-             broker='pyamqp://xmrg_task:239sumwalt@127.0.0.1//',
+             broker=f"pyamqp://{CELERY_USERNAME}:{CELERY_PASSWORD}@{CELERY_SERVER}//",
              backend='rpc://')
 app.conf.worker_force_execv = True
 #app.worker_main(['worker', '--loglevel=info', '--concurrency=4'])
