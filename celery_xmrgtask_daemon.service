@@ -1,0 +1,13 @@
+[Unit]
+Description=XMRGTask Celery Service
+After=network.target
+
+[Service]
+User=xeniaprod
+Group=python_flask
+WorkingDirectory=/home/xeniaprod/scripts/XMRGTask/
+ExecStart=/usr/local/venv/python3_venv/bin/celery -A xmrg_celery_app worker -l INFO
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
