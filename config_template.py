@@ -1,3 +1,8 @@
+#Celery config
+CELERY_USERNAME = ""
+CELERY_PASSWORD = ""
+CELERY_SERVER = "127.0.0.1"
+
 #Directory configurations
 NFS_SERVER_IP=""
 NFS_DIRECTORY=""
