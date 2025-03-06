@@ -23,6 +23,8 @@ DELETE_SOURCE_FILE=True
 DELETE_COMPRESSED_SOURCE_FILE=True
 SAVE_ALL_PRECIP_VALUES=True
 
+#This flag will append the other files created during the XMRG processing.
+ADD_DEBUG_FILES = False
 MAILHOST=""
 FROMADDR=""
 USER=""
