@@ -1,15 +1,14 @@
 import os.path
 
 from celery import Celery
-from datetime import datetime
-import json
+from config import *
 
-app = Celery("tasks", broker='pyamqp://xmrg_task:239sumwalt@127.0.0.1//')
+app = Celery("tasks", broker=f"pyamqp://{CELERY_USERNAME}:{CELERY_PASSWORD}@{CELERY_SERVER}//")
 
-start_date = "2025-01-01"
-end_date = "2025-02-19"
+start_date = "2025-02-01"
+end_date = "2025-02-20"
 email_address="ramaged@mailbox.sc.edu"
-boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/layers/Archive.zip'
+boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/BadPoly1_Charlotte.zip'
 #boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/XMRGAreas.json'
 #boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/boundaries.csv'
 # Read the file and convert to JSON string

@@ -1,29 +1,23 @@
 import os.path
 
 from celery import Celery
-from datetime import datetime
 from dateutil.parser import parse as du_parse
 from xmrg_processing.boundariesparse import Boundary
 from xmrg_processing.xmrg_process import xmrg_process
 from xmrg_processing.csvdatasaver import nexrad_csv_saver
-import zipfile
 import logging
 from email_results import email_results
 import zipfile
 from config import *
-from multiprocessing import set_start_method
 
-#set_start_method('fork')
-
-'''
-import sys
-sys.path.append("./debug/pydevd-pycharm.egg")
-import pydevd_pycharm
-pydevd_pycharm.settrace('127.0.0.1',
-                        port=4200,
-                        stdoutToServer=True,
-                        stderrToServer=True)
-'''
+if os.getenv("REMOTE_DEBUG", False):
+    import sys
+    sys.path.append("./debug/pydevd-pycharm.egg")
+    import pydevd_pycharm
+    pydevd_pycharm.settrace('127.0.0.1',
+                            port=4200,
+                            stdoutToServer=True,
+                            stderrToServer=True)
 
 app = Celery("tasks",
              broker=f"pyamqp://{CELERY_USERNAME}:{CELERY_PASSWORD}@{CELERY_SERVER}//",
@@ -107,38 +101,53 @@ def xmrg_task(self,
                 f"End Date: {process_end_date.strftime('%Y-%m-%d %H-%M-%S')}")
     #Save the boundary file to the task specific path.
     try:
+        valid_boundary_file = False
         boundary_filepath = pre_process_boundary_file(task_path, boundary_filename, boundary_file, task_id)
-        boundaries = Boundary(unique_id=task_id)
-        if boundaries.parse_boundaries_file(boundary_filepath):
-            boundary_count = len(boundaries.boundaries)
-            boundary_names = [bnd[0] for bnd in boundaries.boundaries]
-            logger.info(f"{task_id} Boundaries parsed. Count: {boundary_count} Names: {boundary_names}")
-        else:
-            logger.error(f"{task_id} Boundary file: {boundary_filepath} not parsed")
+        if boundary_filepath is not None:
+            boundaries = Boundary(unique_id=task_id)
+            try:
+                if boundaries.parse_boundaries_file(boundary_filepath):
+                    boundary_count = len(boundaries.boundaries)
+                    boundary_names = [bnd[0] for bnd in boundaries.boundaries]
+                    logger.info(f"{task_id} Boundaries parsed. Count: {boundary_count} Names: {boundary_names}")
+                    valid_boundary_file = True
+                else:
+                    logger.error(f"{task_id} Boundary file: {boundary_filepath} not parsed")
+            except Exception as e:
+                logger.exception(e)
     except Exception as e:
         logger.exception(e)
     else:
+        if valid_boundary_file:
+            csv_saver = nexrad_csv_saver(result_directory)
+            xmrg_proc = xmrg_process(
+                data_saver=csv_saver,
+                boundaries=boundaries.boundaries,
+                worker_process_count=WORKER_COUNT,
+                unique_id=task_id,
+                source_file_working_directory=local_data_directory,
+                output_directory=task_path,
+                base_log_output_directory=log_directory,
+                results_directory=result_directory,
+                kml_output_directory=result_directory,
+                save_all_precip_values=SAVE_ALL_PRECIP_VALUES,
+                delete_source_file=DELETE_SOURCE_FILE,
+                delete_compressed_source_file=DELETE_COMPRESSED_SOURCE_FILE)
+            xmrg_proc.process(start_date=process_start_date, end_date=process_end_date,
+                              base_xmrg_directory=XMRG_DATA_DIRECTORY)
 
-        csv_saver = nexrad_csv_saver(result_directory)
-        xmrg_proc = xmrg_process(
-            data_saver=csv_saver,
-            boundaries=boundaries.boundaries,
-            worker_process_count=WORKER_COUNT,
-            unique_id=task_id,
-            source_file_working_directory=local_data_directory,
-            output_directory=task_path,
-            base_log_output_directory=log_directory,
-            results_directory=result_directory,
-            kml_output_directory=result_directory,
-            save_all_precip_values=SAVE_ALL_PRECIP_VALUES,
-            delete_source_file=DELETE_SOURCE_FILE,
-            delete_compressed_source_file=DELETE_COMPRESSED_SOURCE_FILE)
-        xmrg_proc.process(start_date=process_start_date, end_date=process_end_date,
-                          base_xmrg_directory=XMRG_DATA_DIRECTORY)
+            email_files = csv_saver.csv_filenames
+            subject = "XMRG Results"
+            message = f"Attached are your results for: {start_date} to {end_date}"
+        else:
+            email_files = []
+            subject = "XMRG Results Error"
+            message = (f"There appears to be an issue with your boundaries file.\n"
+                       f"Please make sure your WKID is ESPG:4326 "
+                       f"and you've provided a field in the file defined 'Name'. \n"
+                       f"If you still have an issue, the task id for this run was: {task_id} provide this "
+                       f"to: ramaged@mailbox.sc.edu")
 
-        email_files = csv_saver.csv_filenames
-        subject = "XMRG Results"
-        message = f"Attached are your results for: {start_date} to {end_date}"
         send_email(email_address, subject, message, email_files)
     logger.info(f"{task_id} completed task.")
     return

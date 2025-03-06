@@ -1,3 +1,8 @@
+#sudo systemctl daemon-reload
+#sudo systemctl start celery_xmrgtask_daemon
+#sudo systemctl enable celery_xmrgtask_daemon
+#sudo systemctl status celery_xmrgtask_daemon
+
 [Unit]
 Description=XMRGTask Celery Service
 After=network.target

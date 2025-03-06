@@ -96,7 +96,8 @@ class BoundaryParser:
         try:
             boundaries = self._do_parsing(**kwargs)
         except Exception as e:
-            self._logger.exception(f"{self._id} parse exception: {e}")
+            raise e
+            #self._logger.exception(f"{self._id} parse exception: {e}")
         self._logger.info(f"{self._id} parse finished.")
         return boundaries
 
