@@ -125,7 +125,6 @@ def xmrg_task(self,
 
     else:
         if valid_boundary_file:
-            email_grids = False
             csv_saver = nexrad_csv_saver(result_directory)
             xmrg_proc = xmrg_process(
                 data_saver=csv_saver,
@@ -144,7 +143,7 @@ def xmrg_task(self,
                               base_xmrg_directory=XMRG_DATA_DIRECTORY)
 
             email_files = csv_saver.csv_filenames
-            if email_grids:
+            if ADD_DEBUG_FILES:
                 files = os.listdir(result_directory)
                 extra_files = [debug_file for debug_file in files if debug_file not in email_files]
                 email_files.extend(extra_files)
