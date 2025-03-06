@@ -207,12 +207,14 @@ def find_bbox_from_boundaries(boundaries: [], buffer_percent: float):
         polygon = from_geojson(geojson.dumps(boundary[1]))
         poly_list.append(polygon)
     multi_polys = MultiPolygon(poly_list)
-    minx, miny, maxx, maxy = multi_polys.bounds
+    buffer_poly = multi_polys.buffer(buffer_percent)
+    minx, miny, maxx, maxy = buffer_poly.bounds
     '''
     combined_polygons = unary_union(poly_list)
     minx, miny, maxx, maxy = combined_polygons.bounds
     '''
     #
+    '''
     if buffer_percent is not None:
         width = maxx - minx
         height = maxy - miny
@@ -221,12 +223,6 @@ def find_bbox_from_boundaries(boundaries: [], buffer_percent: float):
         miny = miny - (height * buffer_percent)
         maxx = maxx + (width * buffer_percent)
         maxy = maxy + (height * buffer_percent)
-        '''
-        minx = minx - buffer_percent
-        miny = miny - buffer_percent
-        maxx = maxx + buffer_percent
-        maxy = maxy + buffer_percent
-        '''
-
+    '''
     bbox = [(miny, minx), (maxy, maxx)]
     return bbox
