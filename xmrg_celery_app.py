@@ -125,7 +125,7 @@ def xmrg_task(self,
 
     else:
         if valid_boundary_file:
-            email_grids = True
+            email_grids = False
             csv_saver = nexrad_csv_saver(result_directory)
             xmrg_proc = xmrg_process(
                 data_saver=csv_saver,
