@@ -214,7 +214,6 @@ def find_bbox_from_boundaries(boundaries: [], buffer_percent: float):
     '''
     #
     if buffer_percent is not None:
-        '''
         width = maxx - minx
         height = maxy - miny
 
@@ -227,6 +226,8 @@ def find_bbox_from_boundaries(boundaries: [], buffer_percent: float):
         miny = miny - buffer_percent
         maxx = maxx + buffer_percent
         maxy = maxy + buffer_percent
+        '''
 
-    bbox = [(miny, minx), (maxy, maxx)]
+    #bbox = [(miny, minx), (maxy, maxx)]
+    bbox = [(minx, miny), (maxx, maxy)]
     return bbox
