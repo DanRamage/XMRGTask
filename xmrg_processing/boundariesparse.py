@@ -126,20 +126,20 @@ class SHPBoundaryParser(BoundaryParser):
     def _do_parsing(self, **kwargs):
         shp_filepath = kwargs.get('filepath', None)
         boundaries_tuples = []
-        '''
-        shp_filepath = None
-        files = os.listdir(filepath)
-        for file in files:
-            filename, filext = os.path.splitext(file)
-            if ".shp" in filext:
-                shp_filepath = os.path.join(filepath, file)
-                break
-        '''
         if shp_filepath is not None:
             shp_dataframe = gpd.read_file(shp_filepath, engine='fiona')
+            if shp_dataframe.crs.srs != 'EPSG:4326':
+                shp_dataframe.to_crs(epsg=4326, inplace=True)
             for ndx, row in shp_dataframe.iterrows():
                 bnd_json = geojson.loads(to_geojson(row['geometry']))
-                boundaries_tuples.append((row['Name'], bnd_json))
+                if 'Name' in row:
+                    boundaries_tuples.append((row['Name'], bnd_json))
+                else:
+                    self._logger.error(f"{self._id} File: {shp_filepath} has no Name field, default to filename.")
+                    directory, filename = os.path.split(shp_filepath)
+                    filename, exten = os.path.splitext(filename)
+                    boundaries_tuples.append((f"{filename}_{ndx}", bnd_json))
+
         return boundaries_tuples
 
 class JSONBoundaryParser(BoundaryParser):

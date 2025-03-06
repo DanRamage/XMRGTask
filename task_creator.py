@@ -5,8 +5,8 @@ from config import *
 
 app = Celery("tasks", broker=f"pyamqp://{CELERY_USERNAME}:{CELERY_PASSWORD}@{CELERY_SERVER}//")
 
-start_date = "2025-02-01"
-end_date = "2025-02-20"
+start_date = "2025-03-01"
+end_date = "2025-03-06"
 email_address="ramaged@mailbox.sc.edu"
 boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/BadPoly1_Charlotte.zip'
 #boundary_file_path = '/Users/danramage/Documents/workspace/WaterQuality/XMRGTask/XMRGTask/data/XMRGAreas.json'
