@@ -1,8 +1,8 @@
 import csv
 import os
 from shapely import from_wkt, to_geojson, from_geojson
-from shapely.ops import unary_union
-from shapely.geometry import Polygon, MultiPolygon, box
+from shapely.geometry import box
+from shapely.geometry import MultiPolygon, box
 import geojson
 import geopandas as gpd
 import logging
@@ -214,6 +214,7 @@ def find_bbox_from_boundaries(boundaries: [], buffer_percent: float):
     '''
     #
     if buffer_percent is not None:
+        '''
         width = maxx - minx
         height = maxy - miny
 
@@ -221,5 +222,11 @@ def find_bbox_from_boundaries(boundaries: [], buffer_percent: float):
         miny = miny - (height * buffer_percent)
         maxx = maxx + (width * buffer_percent)
         maxy = maxy + (height * buffer_percent)
+        '''
+        minx = minx - buffer_percent
+        miny = miny - buffer_percent
+        maxx = maxx + buffer_percent
+        maxy = maxy + buffer_percent
+
     bbox = [(miny, minx), (maxy, maxx)]
     return bbox
