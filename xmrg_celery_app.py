@@ -105,18 +105,24 @@ def xmrg_task(self,
         boundary_filepath = pre_process_boundary_file(task_path, boundary_filename, boundary_file, task_id)
         if boundary_filepath is not None:
             boundaries = Boundary(unique_id=task_id)
-            try:
-                if boundaries.parse_boundaries_file(boundary_filepath):
-                    boundary_count = len(boundaries.boundaries)
-                    boundary_names = [bnd[0] for bnd in boundaries.boundaries]
-                    logger.info(f"{task_id} Boundaries parsed. Count: {boundary_count} Names: {boundary_names}")
-                    valid_boundary_file = True
-                else:
-                    logger.error(f"{task_id} Boundary file: {boundary_filepath} not parsed")
-            except Exception as e:
-                logger.exception(e)
+            if boundaries.parse_boundaries_file(boundary_filepath):
+                boundary_count = len(boundaries.boundaries)
+                boundary_names = [bnd[0] for bnd in boundaries.boundaries]
+                logger.info(f"{task_id} Boundaries parsed. Count: {boundary_count} Names: {boundary_names}")
+                valid_boundary_file = True
+            else:
+                logger.error(f"{task_id} Boundary file: {boundary_filepath} not parsed")
     except Exception as e:
+        logger.error(f"{task_id} Boundary file: {boundary_filepath} not parsed")
         logger.exception(e)
+        email_files = []
+        subject = "XMRG Results Error"
+        message = (f"There appears to be an issue with your boundaries file.\n"
+                   f"Please make sure your WKID is ESPG:4326 "
+                   f"and you've provided a field in the file defined 'Name'. \n"
+                   f"If you still have an issue, the task id for this run was: {task_id} provide this "
+                   f"to: ramaged@mailbox.sc.edu")
+
     else:
         if valid_boundary_file:
             csv_saver = nexrad_csv_saver(result_directory)
@@ -139,16 +145,8 @@ def xmrg_task(self,
             email_files = csv_saver.csv_filenames
             subject = "XMRG Results"
             message = f"Attached are your results for: {start_date} to {end_date}"
-        else:
-            email_files = []
-            subject = "XMRG Results Error"
-            message = (f"There appears to be an issue with your boundaries file.\n"
-                       f"Please make sure your WKID is ESPG:4326 "
-                       f"and you've provided a field in the file defined 'Name'. \n"
-                       f"If you still have an issue, the task id for this run was: {task_id} provide this "
-                       f"to: ramaged@mailbox.sc.edu")
 
-        send_email(email_address, subject, message, email_files)
+    send_email(email_address, subject, message, email_files)
     logger.info(f"{task_id} completed task.")
     return
 

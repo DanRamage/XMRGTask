@@ -7,10 +7,6 @@ import geojson
 import geopandas as gpd
 import logging
 
-logger = logging.getLogger('boundariesparse')
-
-
-
 class QueryBoundary:
     def __init__(self):
         self._name = None
@@ -31,7 +27,7 @@ class QueryBoundary:
 class Boundary:
     def __init__(self, unique_id):
         self._id = unique_id
-        self._logger = logging.getLogger('boundariesparse')
+        self._logger = logging.getLogger()
         self._boundaries = []
 
     @property
@@ -82,7 +78,8 @@ class Boundary:
             self._boundaries = bnd_parser.parse(filepath=filename)
             return True
         except Exception as e:
-            self._logger.exception(f"{self._id} parse_boundaries_file exception: {e}")
+            raise e
+            #self._logger.exception(f"{self._id} parse_boundaries_file exception: {e}")
         return False
 
 
