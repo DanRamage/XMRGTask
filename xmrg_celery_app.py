@@ -155,7 +155,7 @@ def xmrg_task(self,
     logger.info(f"{task_id} completed task.")
     return
 
-def send_email(to_email: str, subject: str, message: str, attachments: []):
+def send_email(task_id, to_email: str, subject: str, message: str, attachments: []):
     '''
     :return:
     '''
@@ -165,6 +165,7 @@ def send_email(to_email: str, subject: str, message: str, attachments: []):
         directory, file_name = os.path.split(result_file)
         file_name, exten = os.path.splitext(file_name)
         zip_filepath = os.path.join(directory, f"{file_name}.zip")
+        logger.info(f"{task_id} adding file: {zip_filepath} to the zip.")
         with zipfile.ZipFile(zip_filepath, 'w', compression=zipfile.ZIP_DEFLATED) as zip_ref:
             zip_ref.write(result_file, f"{file_name}{exten}")
             files_to_attach.append(zip_filepath)
