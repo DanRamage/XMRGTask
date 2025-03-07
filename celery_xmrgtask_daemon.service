@@ -11,7 +11,7 @@ After=network.target
 User=xeniaprod
 Group=python_flask
 WorkingDirectory=/home/xeniaprod/scripts/XMRGTask/
-ExecStart=/usr/local/venv/python3_venv/bin/celery -A xmrg_celery_app worker -l INFO --logfile=/home/xeniaprod/scripts/XMRGTask/
+ExecStart=/usr/local/venv/python3_venv/bin/celery -A xmrg_celery_app worker -l INFO --logfile=/home/xeniaprod/scripts/XMRGTask/celery_task_logging.conf
 Restart=always
 
 [Install]
