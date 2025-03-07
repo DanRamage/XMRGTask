@@ -9,6 +9,7 @@ import logging
 from email_results import email_results
 import zipfile
 from config import *
+import glob
 
 if os.getenv("REMOTE_DEBUG", False):
     import sys
@@ -144,9 +145,9 @@ def xmrg_task(self,
 
             email_files = csv_saver.csv_filenames
             if ADD_DEBUG_FILES:
-                files = os.listdir(result_directory)
-                extra_files = [debug_file for debug_file in files if debug_file not in email_files]
-                email_files.extend(extra_files)
+                debug_files_filter = os.path.join(result_directory, "*.json")
+                files = glob.glob(debug_files_filter)
+                email_files.extend(debug_files_filter)
             subject = "XMRG Results"
             message = f"Attached are your results for: {start_date} to {end_date}"
 
