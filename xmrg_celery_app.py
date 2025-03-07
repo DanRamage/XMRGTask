@@ -151,7 +151,7 @@ def xmrg_task(self,
             subject = "XMRG Results"
             message = f"Attached are your results for: {start_date} to {end_date}"
 
-    send_email(email_address, subject, message, email_files)
+    send_email(task_id, email_address, subject, message, email_files)
     logger.info(f"{task_id} completed task.")
     return
 
