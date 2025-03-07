@@ -159,6 +159,8 @@ def send_email(task_id, to_email: str, subject: str, message: str, attachments: 
     '''
     :return:
     '''
+    logger = logging.getLogger()
+
     #Let's zip the files
     files_to_attach = []
     for result_file in attachments:
