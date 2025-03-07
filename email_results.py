@@ -7,7 +7,7 @@ def email_results(email_settings, subject, message, attachments):
 
     try:
         logger = logging.getLogger()
-        logger.info(f"Sending email, subject: {subject}")
+        logger.info(f"Sending email, subject: {subject} to: {email_settings['to_addresses']}")
         # Now send the email.
         email_obj = smtpClass(host=email_settings['host'],
                          user=email_settings['username'],
