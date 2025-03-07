@@ -13,10 +13,10 @@ from xmrgprocessing.xmrg_results import xmrg_results
 class xmrg_process:
     def __init__(self, **kwargs):
         self._xmrg_proc = xmrg_processing_geopandas()
-        ll, ur = find_bbox_from_boundaries(kwargs['boundaries'], 1)
+        ll_orig, ur_orig = find_bbox_from_boundaries(kwargs['boundaries'], 1)
         #To make sure our BBOX will encompass the polygon, we bump the X a degree at each corner.
-        ll[1] += 1
-        ur[1] -= 1
+        ll = (ll_orig[0], ll_orig[1] - 1)
+        ur = (ur_orig[0], ur_orig[1] + 1)
         self._xmrg_proc.setup(worker_process_count=kwargs['worker_process_count'],
                     min_latitude_longitude=ll,
                     max_latitude_longitude=ur,
