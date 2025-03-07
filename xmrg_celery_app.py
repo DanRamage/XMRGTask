@@ -147,7 +147,7 @@ def xmrg_task(self,
             if ADD_DEBUG_FILES:
                 debug_files_filter = os.path.join(result_directory, "*.json")
                 files = glob.glob(debug_files_filter)
-                email_files.extend(debug_files_filter)
+                email_files.extend(files)
             subject = "XMRG Results"
             message = f"Attached are your results for: {start_date} to {end_date}"
 
