@@ -34,9 +34,20 @@ class Boundary:
     def boundaries(self):
         return self._boundaries
 
-    def determine_boundaries_filetype(self, filepath: str):
+    def determine_boundaries_filetype(self, file: str):
         type = None
-        filename = None
+        filepath, filename = os.path.split(file)
+        filename, filext = os.path.splitext(file)
+        if ".shp" in filext:
+            type = 'shapefile'
+            filename = os.path.join(filepath, file)
+        elif ".csv" in filext:
+            type = 'csv'
+            filename = os.path.join(filepath, file)
+        elif ".json" in filext:
+            type = 'json'
+            filename = os.path.join(filepath, file)
+        '''
         files = os.listdir(filepath)
         self._logger.info(f"{self._id} files: {files}")
         for file in files:
@@ -53,6 +64,7 @@ class Boundary:
                 type = 'json'
                 filename = os.path.join(filepath, file)
                 break
+        '''
         return type,filename
 
     def get_parser(self, file_type: str):
@@ -68,6 +80,24 @@ class Boundary:
         self._logger.info(f"{self._id} parse_boundaries_file checking: {filepath}")
         #If the filepath is a directory, then we'll list the files in it. This is probably going to
         #be a unzipped shapefile.
+        files = os.listdir(filepath)
+        self._logger.info(f"{self._id} files: {files}")
+        for file in files:
+            fullpath = os.path.join(filepath, file)
+            file_type,filename = self.determine_boundaries_filetype(fullpath)
+            if file_type != None:
+                self._logger.info(f"{self._id} parse_boundaries_file checking: {filepath} is type: {file_type}")
+                parser_class = self.get_parser(file_type)
+                self._logger.info(f"{self._id} parse_boundaries_file parser is: {parser_class}")
+                try:
+                    bnd_parser = parser_class(unique_id=self._id)
+                    self._logger.info(f"{self._id} parse_boundaries_file parsing file: {filepath}")
+                    self._boundaries.append(bnd_parser.parse(filepath=filename))
+                except Exception as e:
+                    raise e
+        if len(self._boundaries) > 0:
+            return True
+        '''
         file_type,filename = self.determine_boundaries_filetype(filepath)
         self._logger.info(f"{self._id} parse_boundaries_file checking: {filepath} is type: {file_type}")
         parser_class = self.get_parser(file_type)
@@ -80,6 +110,7 @@ class Boundary:
         except Exception as e:
             raise e
             #self._logger.exception(f"{self._id} parse_boundaries_file exception: {e}")
+        '''
         return False
 
 

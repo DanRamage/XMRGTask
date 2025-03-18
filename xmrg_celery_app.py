@@ -149,7 +149,8 @@ def xmrg_task(self,
                 files = glob.glob(debug_files_filter)
                 email_files.extend(files)
             subject = "XMRG Results"
-            message = f"Attached are your results for: {start_date} to {end_date}"
+            message = (f"Attached are your results for: {start_date} to {end_date}\n "
+                       f"The task id for this process is: {task_id}")
 
     send_email(task_id, email_address, subject, message, email_files)
     logger.info(f"{task_id} completed task.")
