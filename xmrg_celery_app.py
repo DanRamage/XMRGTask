@@ -10,6 +10,7 @@ from email_results import email_results
 import zipfile
 from config import *
 import glob
+import time
 
 if os.getenv("REMOTE_DEBUG", False):
     import sys
@@ -74,6 +75,8 @@ def xmrg_task(self,
               boundary_filename: str,
               boundary_file: bytes,
               email_address: str):
+
+    start_tic = time.time()
     task_id = self.request.id
 
     task_path = os.path.join(SCRIPT_DIRECTORY, REQUEST_DIRECTORY, task_id)
@@ -143,14 +146,26 @@ def xmrg_task(self,
             xmrg_proc.process(start_date=process_start_date, end_date=process_end_date,
                               base_xmrg_directory=XMRG_DATA_DIRECTORY)
 
+            stop_tic = time.time()
+
             email_files = csv_saver.csv_filenames
+            debug_file_message = ""
             if ADD_DEBUG_FILES:
                 debug_files_filter = os.path.join(result_directory, "*.json")
                 files = glob.glob(debug_files_filter)
                 email_files.extend(files)
+                debug_file_message = ("The additional files are to help in debugging. \n"
+                                      "The file contents are as follows:\n "
+                                      "Files with 'fullgrid' in the name show the all the NEXRAD grids used.\n"
+                                      "Files with 'boundary' in the name show the boundaries from the geospatial "
+                                      "files provided.\n"
+                                      "Files with 'percentage' in the name shows the percentage of each NEXRAD grid \n"
+                                      "used for each boundary.")
             subject = "XMRG Results"
             message = (f"Attached are your results for: {start_date} to {end_date}\n "
-                       f"The task id for this process is: {task_id}")
+                       f"The task id for this process is: {task_id}\n\n"
+                       f"{debug_file_message}\n"
+                       f"Processing time: {stop_tic - start_tic} seconds")
 
     send_email(task_id, email_address, subject, message, email_files)
     logger.info(f"{task_id} completed task.")
