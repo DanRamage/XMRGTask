@@ -93,7 +93,8 @@ class Boundary:
                     bnd_parser = parser_class(unique_id=self._id)
                     self._logger.info(f"{self._id} parse_boundaries_file parsing file: {filepath}")
                     boundary = bnd_parser.parse(filepath=filename)
-                    self._boundaries.append(boundary[0])
+                    for bound in boundary:
+                        self._boundaries.append(bound)
                 except Exception as e:
                     raise e
         if len(self._boundaries) > 0:
@@ -118,7 +119,7 @@ class Boundary:
 class BoundaryParser:
     def __init__(self, unique_id):
         self._id = unique_id
-        self._logger = logging.getLogger('boundariesparse')
+        self._logger = logging.getLogger()
     def parse(self, **kwargs):
         boundaries = None
         self._logger.info(f"{self._id} parse started filepath: {kwargs['filepath']}")
