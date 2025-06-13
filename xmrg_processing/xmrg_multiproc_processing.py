@@ -24,7 +24,7 @@ def file_queue_builder(**kwargs):
     :param kwargs:
     :return:
     '''
-    logger = logging.getLogger('file_queue_builder')
+    logger = logging.getLogger()
     try:
         input_queue = kwargs['input_queue']
         file_list_iterator = kwargs['file_list_iterator']
